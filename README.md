@@ -1,4 +1,5 @@
-# قبلتي — Qiblaty
+<img width="1856" height="2304" alt="qiblay" src="https://github.com/user-attachments/assets/6d37bcff-7d34-48e9-9949-be08f31b4283" />
+<img width="1856" height="2304" alt="qiblay" src="https://github.com/user-attachments/assets/263fb3ca-c100-4fdc-a365-5f3162502a77" /># قبلتي — Qiblaty
 
 تطبيق عربي لمواقيت الصلاة واتجاه القبلة ومتابعة العبادات، مبني بـ React وVite.
 
