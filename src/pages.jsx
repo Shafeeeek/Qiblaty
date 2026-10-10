@@ -671,7 +671,11 @@ export function Assistant() {
         body: JSON.stringify({ messages: conversation.slice(-20) }),
         signal: controller.current.signal,
       });
-      if (!response.ok) throw new Error("unavailable");
+      if (!response.ok) {
+        const httpErr = new Error("http");
+        httpErr.status = response.status;
+        throw httpErr;
+      }
       const data = await response.json();
       if (typeof data.reply !== "string" || !data.reply.trim())
         throw new Error("empty");
@@ -681,12 +685,25 @@ export function Assistant() {
           { role: "assistant", content: data.reply },
         ]);
     } catch (err) {
-      if (mounted.current)
-        setError(
-          err.name === "AbortError"
-            ? "استغرقت الإجابة وقتاً أطول من المتوقع. حاول مرة أخرى."
-            : "تعذّر الاتصال بالمساعد الآن. تأكد من تشغيل خدمة المساعد وإعدادها، ثم حاول مجدداً.",
-        );
+      if (mounted.current) {
+        let msg;
+        if (err.name === "AbortError") {
+          msg = "استغرقت الإجابة وقتاً أطول من المتوقع. حاول مرة أخرى.";
+        } else if (err.status === 429) {
+          msg = "تجاوزت الحد المسموح به من الطلبات. انتظر قليلاً ثم حاول مجدداً.";
+        } else if (err.status === 504) {
+          msg = "انتهت مهلة الاستجابة. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.";
+        } else if (err.status === 503) {
+          msg = "خدمة المساعد غير متاحة حالياً. يُرجى المحاولة لاحقاً.";
+        } else if (err.status >= 500) {
+          msg = "حدث خطأ في الخادم. يُرجى المحاولة مرة أخرى.";
+        } else if (!navigator.onLine) {
+          msg = "لا يوجد اتصال بالإنترنت. تحقق من شبكتك وحاول مجدداً.";
+        } else {
+          msg = "تعذّر الوصول إلى المساعد. تحقق من اتصالك وحاول مرة أخرى.";
+        }
+        setError(msg);
+      }
     } finally {
       clearTimeout(timeout);
       if (mounted.current) setBusy(false);
